@@ -28,6 +28,7 @@ jobs:
 
       - name: Locate app directory
         id: findapp
+        shell: bash
         run: |
           set -e
           APP_DIR="$(git ls-files | grep -E '^.+/application\.fam$' | sed 's|/application\.fam$||' | head -n1)"
@@ -39,15 +40,19 @@ jobs:
           echo "appdir=$APP_DIR" >> $GITHUB_OUTPUT
 
       - name: Build app
+        shell: bash
         working-directory: ${{ steps.findapp.outputs.appdir }}
         run: |
           ufbt update || true
           ufbt build
-          ls -la
+          echo "Searching for built .fap files..."
+          find . -type f -name "*.fap" -print || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: erhu_tuner_build
           path: |
-            ${{ steps.findapp.outputs.appdir }}/build/**
+            **/*.fap
+            build/**/*.fap
+            ${{ steps.findapp.outputs.appdir }}/**/*.fap
