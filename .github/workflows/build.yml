@@ -15,20 +15,26 @@ jobs:
         with:
           python-version: '3.11'
 
+      # (Optional but helps on fresh runners)
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi
+
       - name: Install ufbt
         run: |
           python -m pip install --upgrade pip
-          pip install flipperzero-ufbt
+          pip install ufbt
+          ufbt --version
 
       - name: Build app
         working-directory: ./erhu_tuner
         run: |
+          ufbt update || true
           ufbt build
-          ls -l
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: erhu_tuner_build
-          path: |
-            erhu_tuner/build/**
+          path: erhu_tuner/build/**
