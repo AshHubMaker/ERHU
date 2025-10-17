@@ -45,14 +45,22 @@ jobs:
         run: |
           ufbt update || true
           ufbt build
-          echo "Searching for built .fap files..."
-          find . -type f -name "*.fap" -print || true
+          echo "Search for .fap after build:"
+          find . ~/.ufbt -type f -name "*.fap" -print || true
+
+      - name: Collect .fap artifacts
+        shell: bash
+        run: |
+          set -e
+          mkdir -p artifact_out
+          # Copy any .fap from workspace tree and uFBT build cache
+          find . ~/.ufbt -type f -name "*.fap" -print -exec cp -v {} artifact_out/ \; || true
+          echo "Collected files:"
+          ls -la artifact_out || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: erhu_tuner_build
-          path: |
-            **/*.fap
-            build/**/*.fap
-            ${{ steps.findapp.outputs.appdir }}/**/*.fap
+          path: artifact_out/**
+          if-no-files-found: error
