@@ -15,7 +15,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      # (Optional but helps on fresh runners)
       - name: Install system deps
         run: |
           sudo apt-get update
@@ -27,14 +26,28 @@ jobs:
           pip install ufbt
           ufbt --version
 
+      - name: Locate app directory
+        id: findapp
+        run: |
+          set -e
+          APP_DIR="$(git ls-files | grep -E '^.+/application\.fam$' | sed 's|/application\.fam$||' | head -n1)"
+          if [ -z "$APP_DIR" ]; then
+            echo "Could not find application.fam in repo. Make sure your app folder contains application.fam."
+            exit 1
+          fi
+          echo "App dir: $APP_DIR"
+          echo "appdir=$APP_DIR" >> $GITHUB_OUTPUT
+
       - name: Build app
-        working-directory: ./erhu_tuner
+        working-directory: ${{ steps.findapp.outputs.appdir }}
         run: |
           ufbt update || true
           ufbt build
+          ls -la
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: erhu_tuner_build
-          path: erhu_tuner/build/**
+          path: |
+            ${{ steps.findapp.outputs.appdir }}/build/**
